@@ -18,11 +18,32 @@ export default function InventorySection() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   
+  // State for Inventory Analytics
+  const [inventoryAnalytics, setInventoryAnalytics] = useState(null);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
+
   const initialNewProductState = { name: "", description: "", price: "", stock: "", category: "", sku: "", images: [] };
   const [newProduct, setNewProduct] = useState(initialNewProductState);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   
+  // Fetch inventory analytics on component mount
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        setIsAnalyticsLoading(true);
+        const response = await axiosInstance.get('/dashboard/inventory-analytics');
+        setInventoryAnalytics(response.data);
+      } catch (error) {
+        console.error("Failed to fetch inventory analytics:", error);
+      } finally {
+        setIsAnalyticsLoading(false);
+      }
+    };
+    fetchAnalytics();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+
   const formatCurrency = (amount) => new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN" }).format(amount || 0);
   const filteredProducts = (products || []).filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -75,15 +96,15 @@ export default function InventorySection() {
   
   return (
     <div className="space-y-6">
-      <InventoryAnalytics />
+      <InventoryAnalytics data={inventoryAnalytics} isLoading={isAnalyticsLoading} />
       <div className="bg-zinc-900 rounded-xl border border-zinc-800 p-6">
-        <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">Inventory</h2><button onClick={() => setShowAddModal(true)} className="bg-[#32cd32] text-black px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Plus className="w-4 h-4" /> Add Product</button></div>
+        <div className="flex justify-between items-center mb-6"><h2 className="text-2xl font-bold">Product Management</h2><button onClick={() => setShowAddModal(true)} className="bg-[#32cd32] text-black px-4 py-2 rounded-lg font-medium flex items-center gap-2"><Plus className="w-4 h-4" /> Add Product</button></div>
         <div className="relative mb-4"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" /><input type="text" placeholder="Search products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 p-2 bg-zinc-800 rounded-lg border border-zinc-700" /></div>
         <div className="overflow-x-auto"><table className="w-full text-left">
           <thead className="border-b border-zinc-700 text-sm text-zinc-400"><tr><th className="p-4">Product</th><th className="p-4">Price</th><th className="p-4">Stock</th><th className="p-4">Actions</th></tr></thead>
           <tbody>
             {filteredProducts.map(p => (<tr key={p._id} className="border-b border-zinc-800">
-              <td className="p-4 flex items-center gap-3"><img src={p.images?.[0] || '/placeholder.svg?h=40&w=40'} alt={p.name} className="w-10 h-10 rounded-md bg-zinc-700" /><span className="font-medium text-white">{p.name}</span></td>
+              <td className="p-4 flex items-center gap-3"><img src={p.images?.[0] || '/placeholder.svg?h=40&w=40'} alt={p.name} className="w-10 h-10 rounded-md bg-zinc-700 object-cover" /><span className="font-medium text-white">{p.name}</span></td>
               <td className="p-4 text-white">{formatCurrency(p.price)}</td><td className="p-4 text-white">{p.stock}</td>
               <td className="p-4"><div className="flex gap-2"><button onClick={() => setEditingProduct(p)} className="text-blue-400 p-1"><Edit className="w-4 h-4" /></button><button onClick={() => handleDelete(p._id)} className="text-red-400 p-1"><Trash2 className="w-4 h-4" /></button></div></td>
             </tr>))}

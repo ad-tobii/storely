@@ -10,6 +10,7 @@ import Editor from './pages/Templates/Editor'
 import SellerDashboard from './pages/seller/SellerPage/seller-dashboard'
 import CustomerSignup from './pages/customer/customerSignup'
 import Storefront from './pages/Storefront'
+import LandingPage from './pages/LandingPage'
 
 // ✅ NEW: Import the ProtectedRoute and the global CartPage
 import ProtectedRoute from './pages/components/ProtectedRoute'
@@ -26,7 +27,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         {/* --- Public & Authentication Routes --- */}
-        <Route path="/" element={<div>Welcome to Storely!</div>} />
+        <Route path="/" element={<LandingPage/>} />
         <Route path="/signup-options" element={<SignupOptions />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/customersignup" element={<CustomerSignup />} />

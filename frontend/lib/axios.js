@@ -1,14 +1,29 @@
+// src/lib/axios.js
+
 import axios from 'axios';
 
+// 1. Get the base URL from Vite's environment variables.
+// This is the ONLY line that needs to be aware of the environment.
+const apiBaseURL = import.meta.env.VITE_API_BASE_URL;
+console.log("VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+console.log("Full env:", import.meta.env);
+
+// 2. Add a development-time check to ensure the variable is actually set.
+// This helps catch configuration errors early.
+if (!apiBaseURL) {
+  throw new Error("FATAL: VITE_API_BASE_URL is not defined. Please check your .env files.");
+}
+
+// 3. Create the Axios instance using the dynamic URL.
 export const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5001/api',
+  baseURL: apiBaseURL,
   withCredentials: true,
-  timeout: 60000, // 60 seconds
-  maxContentLength: 50 * 1024 * 1024, // 50MB
-  maxBodyLength: 50 * 1024 * 1024, // 50MB
+  timeout: 60000,
+  maxContentLength: 50 * 1024 * 1024,
+  maxBodyLength: 50 * 1024 * 1024,
 });
 
-// Add request interceptor for better error handling
+// 4. Interceptors remain unchanged. They are environment-agnostic.
 axiosInstance.interceptors.request.use(
   (config) => {
     return config;
@@ -18,7 +33,6 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Add response interceptor for retry logic
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -26,7 +40,6 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const config = error.config;
 
-    // Retry logic for connection errors
     if (
       (error.code === 'ECONNRESET' || 
        error.code === 'ECONNABORTED' || 
@@ -37,10 +50,8 @@ axiosInstance.interceptors.response.use(
     ) {
       config.__isRetryRequest = true;
       config.retry -= 1;
-
       const delay = config.retryDelay || 1000;
       await new Promise(resolve => setTimeout(resolve, delay));
-
       return axiosInstance(config);
     }
 

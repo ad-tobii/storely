@@ -1,4 +1,7 @@
+
+
 "use client"
+import { useNavigate } from "react-router-dom"
 import { BarChart3, Users, Package, ShoppingCart, Palette, Settings, X, TrendingUp, Bell } from "lucide-react"
 
 const menuItems = [
@@ -13,6 +16,8 @@ const menuItems = [
 ]
 
 export default function Sidebar({ activeSection, setActiveSection, isOpen }) {
+  const navigate = useNavigate()
+
   return (
     <aside
       className={`fixed top-0 left-0 h-full z-50 w-72 bg-zinc-900 text-white shadow-xl transform transition-transform duration-300 ease-in-out ${
@@ -43,7 +48,13 @@ export default function Sidebar({ activeSection, setActiveSection, isOpen }) {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveSection(item.id)}
+                  onClick={() => {
+                    if (item.id === "store-editor") {
+                      navigate("/editor")
+                    } else {
+                      setActiveSection(item.id)
+                    }
+                  }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
                     isActive
                       ? "bg-[#32cd32] text-black font-medium"
