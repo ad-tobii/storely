@@ -4,10 +4,10 @@ import express from "express";
 import upload from "../middleware/upload.middleware.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import Seller from "../models/seller.models.js";
-import ArtisanElegantSettings from "../templates/ArtisanElegantSettings.templates.js";
-import BoldMinimalistSettings from "../templates/BoldMinimalistSettings.templates.js";
-import PlayfulColorfulSettings from "../templates/PlayfulColorfulSettings.templates.js";
-import ModernSleekSettings from "../templates/ModernSleekSettings.templates.js";
+import ArtisanElegantSettings from "../templates/artisanElegantSettings.templates.js";
+import BoldMinimalistSettings from "../templates/boldMinimalistSettings.templates.js";
+import PlayfulColorfulSettings from "../templates/playfulColorfulSettings.templates.js";
+import ModernSleekSettings from "../templates/modernSleekSettings.templates.js";
 
 const router = express.Router();
 
