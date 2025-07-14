@@ -2,7 +2,7 @@
 
 import Seller from '../models/seller.models.js';
 // Make sure to import the settings model you want to use as the default
-import ArtisanElegantSettings from '../templates/ArtisanElegantSettings.templates.js';
+import ArtisanElegantSettings from '../templates/artisanElegantSettings.templates.js';
 
 /**
  * Controller to handle the final submission of the seller onboarding form.
