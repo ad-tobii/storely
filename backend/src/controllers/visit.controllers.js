@@ -16,8 +16,6 @@ export const trackVisit = async (req, res) => {
         // If a session is already active for this user, do nothing.
         // This prevents creating a new "Visit" for every page refresh or navigation.
         if (existingSession) {
-            // Optionally, you can extend the cookie's life here if you want a "sliding" session
-            // res.cookie(SESSION_COOKIE_NAME, existingSession, { maxAge: SESSION_DURATION_MS, httpOnly: true, sameSite: 'strict' });
             return res.status(200).json({ message: "Session already active." });
         }
 
@@ -34,7 +32,6 @@ export const trackVisit = async (req, res) => {
         const newVisit = new Visit({
             seller: sellerId,
             customer: customerId,
-            // 'page' is no longer needed as we are tracking the entire session, not single pages.
         });
         await newVisit.save();
 
@@ -43,7 +40,8 @@ export const trackVisit = async (req, res) => {
             maxAge: SESSION_DURATION_MS, // The cookie will expire in 30 minutes
             httpOnly: true, // Prevents client-side script access
             sameSite: 'strict', // Helps prevent CSRF
-            secure: process.env.NODE_ENV !== 'development',
+            // This is the key change: the cookie will only be sent over HTTPS in production
+            secure: process.env.NODE_ENV === 'production',
         });
 
         res.status(201).json({ message: "New visit tracked successfully." });

@@ -7,6 +7,7 @@ import ProductView from '../models/productView.models.js';
 import CartSession from '../models/cartSession.models.js';
 import Review from '../models/review.models.js';
 import mongoose from 'mongoose';
+import Product from '../models/product.models.js';
 
 export const getAnalytics = async (req, res) => {
     try {
@@ -122,6 +123,76 @@ export const getAnalytics = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch analytics" });
     }
 };
+
+export const getInventoryAnalytics = async (req, res) => {
+    try {
+        const sellerId = req.user._id;
+        const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30));
+        const ninetyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 90));
+        const lowStockThreshold = 10; // Set a clear threshold
+
+        // Use Promise.all to run queries concurrently for better performance
+        const [
+            allProducts,
+            salesLast30Days,
+            recentSales
+        ] = await Promise.all([
+            Product.find({ seller: sellerId }),
+            Order.aggregate([
+                { $match: { seller: sellerId, createdAt: { $gte: thirtyDaysAgo } } },
+                { $unwind: "$products" },
+                { $group: { _id: "$products.product", unitsSold: { $sum: "$products.quantity" } } },
+                { $sort: { unitsSold: -1 } },
+            ]),
+            Order.find({ seller: sellerId, createdAt: { $gte: ninetyDaysAgo } }).select('products.product')
+        ]);
+        
+        // 1. Calculate Total Stock Value & find Low Stock Products in one go
+        let totalStockValue = 0;
+        const lowStockProducts = [];
+        allProducts.forEach(p => {
+            totalStockValue += p.price * p.stock;
+            if (p.stock > 0 && p.stock <= lowStockThreshold) {
+                lowStockProducts.push({ name: p.name, stock: p.stock });
+            }
+        });
+        
+        // 2. Format Fast Movers using the populated results
+        const fastMoversData = await Product.populate(salesLast30Days.slice(0, 4), { path: '_id', select: 'name' });
+        const fastMovers = fastMoversData.map(p => ({ name: p._id.name, unitsSold: p.unitsSold }));
+        
+        // 3. Identify Dead Stock
+        const recentlySoldProductIds = new Set();
+        recentSales.forEach(order => {
+            order.products.forEach(item => {
+                recentlySoldProductIds.add(item.product.toString());
+            });
+        });
+
+        const deadStock = allProducts
+            .filter(p => p.stock > 0 && !recentlySoldProductIds.has(p._id.toString()))
+            .slice(0, 2) // Limit for UI consistency
+            .map(p => ({ name: p.name, stock: p.stock, daysSinceLastSale: 90 })); // Stating it's been at least 90 days
+            
+        // 4. Calculate a simplified Turnover Rate
+        const totalUnitsSold = salesLast30Days.reduce((acc, p) => acc + p.unitsSold, 0);
+        const totalUnitsInStock = allProducts.reduce((acc, p) => acc + p.stock, 0);
+        const turnoverRate = totalUnitsInStock > 0 ? (totalUnitsSold / totalUnitsInStock) : 0;
+
+        res.status(200).json({
+            totalStockValue,
+            turnoverRate: parseFloat(turnoverRate.toFixed(1)),
+            lowStockProducts: lowStockProducts.slice(0, 3), // Match UI
+            fastMovers,
+            deadStock,
+        });
+
+    } catch (error) {
+        console.error("Inventory Analytics Error:", error);
+        res.status(500).json({ message: "Failed to fetch inventory analytics" });
+    }
+};
+
 
 export const getCustomerDetails = async (req, res) => {
     try {

@@ -67,14 +67,14 @@ required:[true, "Role must be entered to sign up"]
   { timestamps: true },
 )
 
-sellerSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next()
-  this.password = await bcrypt.hash(this.password, 10)
-  next()
-})
+// sellerSchema.pre("save", async function (next) {
+//   if (!this.isModified("password")) return next()
+//   this.password = await bcrypt.hash(this.password, 10)
+//   next()
+// })
 
-sellerSchema.methods.comparePassword = async function (password) {
-  return bcrypt.compare(password, this.password)
-}
+// sellerSchema.methods.comparePassword = async function (password) {
+//   return bcrypt.compare(password, this.password)
+// }
 
 export default mongoose.models.Seller || mongoose.model("Seller", sellerSchema)

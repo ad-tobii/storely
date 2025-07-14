@@ -9,7 +9,6 @@ import nodemailer from 'nodemailer';
 dotenv.config();
 
 export const generateToken = (userId, role, res) => {
-  // ... (no changes here)
   const token = jwt.sign({ userId, role }, process.env.JWT_SECRET, {
     expiresIn: '7d',
   });
@@ -18,13 +17,13 @@ export const generateToken = (userId, role, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
     sameSite: 'strict',
-    secure: process.env.NODE_ENV !== 'development',
+    // This is the key change: the cookie will only be sent over HTTPS in production
+    secure: process.env.NODE_ENV === 'production',
   });
   return token;
 };
 
 export const generateOtp = async (email, role) => {
-  // ... (no changes here)
   try {
     const gen_otp = otpGenerator.generate(5, {
       upperCaseAlphabets: false,

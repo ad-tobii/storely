@@ -2,8 +2,7 @@
 
 import express from 'express';
 import { protectRoute } from '../middleware/auth.middleware.js';
-// ✅ UPDATED: import new controller
-import { getAnalytics, getCustomerDetails } from '../controllers/dashboard.controllers.js';
+import { getAnalytics, getCustomerDetails, getInventoryAnalytics } from '../controllers/dashboard.controllers.js';
 import Seller from '../models/seller.models.js';
 import Order from '../models/order.models.js';
 import Product from '../models/product.models.js';
@@ -11,10 +10,13 @@ import Customer from '../models/customer.models.js';
 
 const router = express.Router();
 
-// --- NEW Analytics Endpoint ---
+// --- Main Analytics Endpoint ---
 router.get('/analytics', protectRoute, getAnalytics);
 
-// ✅ NEW: Route to get detailed info for a single customer
+// --- NEW Inventory Analytics Endpoint ---
+router.get('/inventory-analytics', protectRoute, getInventoryAnalytics);
+
+// --- Customer Details Endpoint ---
 router.get('/customers/:customerId/details', protectRoute, getCustomerDetails);
 
 
