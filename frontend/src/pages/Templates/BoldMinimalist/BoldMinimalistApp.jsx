@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { ShoppingCart } from "lucide-react"
-import BoldMinimalistHomePage from "./BoldMinimalistHomepage"
+import BoldMinimalistHomePage from "./BoldMinimalistHomePage"
 import BoldMinimalistShopPage from "./BoldMinimalistShopPage"
 import BoldMinimalistProductDetailsPage from "./BoldMinimalistProductDetailsPage"
 import BoldMinimalistAboutPage from "./BoldMinimalistAboutPage"
