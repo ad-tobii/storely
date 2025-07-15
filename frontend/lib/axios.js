@@ -1,5 +1,5 @@
 // src/lib/axios.js
-
+//adeksss
 import axios from 'axios';
 
 // 1. Get the base URL from Vite's environment variables.
