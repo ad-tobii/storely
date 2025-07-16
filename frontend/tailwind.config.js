@@ -1,7 +1,8 @@
-/** @type {import('tailwindcss').Config} */
-const defaultConfig = ("shadcn/ui/tailwind.config")
+import defaultConfig from 'shadcn/ui/tailwind.config';
+import tailwindcssAnimate from 'tailwindcss-animate';
 
-export default  {
+/** @type {import('tailwindcss').Config} */
+const config = {
   ...defaultConfig,
   content: [
     ...defaultConfig.content,
@@ -28,6 +29,8 @@ export default  {
         "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
       keyframes: {
+        // Since keyframes is a direct property of extend, we spread it here
+        ...defaultConfig.theme.extend.keyframes,
         "scroll-left": {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
@@ -43,5 +46,7 @@ export default  {
       },
     },
   },
-  plugins: [...defaultConfig.plugins, require("tailwindcss-animate")],
-}
+  plugins: [...defaultConfig.plugins, tailwindcssAnimate],
+};
+
+export default config;
