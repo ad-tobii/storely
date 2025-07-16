@@ -6,7 +6,6 @@ import { useAuthStore } from "../../../store/useAuthStore"
 
 export default function OtpVerification() {
   const [otp, setOtp] = useState(["", "", "", "", ""])
-  const [isLoading, setIsLoading] = useState(false)
   const [localError, setLocalError] = useState(null)
   const [redirectUrl, setRedirectUrl] = useState(null)
 
@@ -14,12 +13,15 @@ export default function OtpVerification() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { user, role, getOtp, verifyOtp, error: authError } = useAuthStore()
+  const { user, role, getOtp, verifyOtp, error: authError, isLoading: isAuthLoading } = useAuthStore()
+  const [isResending, setIsResending] = useState(false);
 
+  const hasFetchedOtp = useRef(false)
+  
   useEffect(() => {
     inputRefs.current = inputRefs.current.slice(0, 5)
   }, [])
-
+  
   useEffect(() => {
     const params = new URLSearchParams(location.search)
     const redirect = params.get("redirect")
@@ -28,33 +30,16 @@ export default function OtpVerification() {
     }
   }, [location.search])
 
-  const hasFetchedOtp = useRef(false)
   useEffect(() => {
-    console.log("[Otp.jsx] useEffect triggered. State:", {
-      user,
-      role,
-      hasFetched: hasFetchedOtp.current,
-    })
-
-    if (!user || !user.email || !role) {
-      console.log("[Otp.jsx] useEffect exiting: user, user.email, or role is missing.")
+    if (!user || !user.email || !role || hasFetchedOtp.current) {
       return
     }
-
-    if (hasFetchedOtp.current) {
-      console.log("[Otp.jsx] useEffect exiting: OTP has already been fetched.")
-      return
-    }
-
-    hasFetchedOtp.current = true
-    console.log("[Otp.jsx] Conditions met. Calling fetchOtp().")
 
     const fetchOtp = async () => {
+      hasFetchedOtp.current = true;
       try {
         await getOtp()
-        console.log("[Otp.jsx] fetchOtp() call completed successfully.")
       } catch (err) {
-        console.error("[Otp.jsx] Error calling getOtp():", err)
         setLocalError(err.response?.data?.message || err.message || "Failed to request OTP")
       }
     }
@@ -104,7 +89,6 @@ export default function OtpVerification() {
       return
     }
 
-    setIsLoading(true)
     setLocalError(null)
 
     try {
@@ -118,9 +102,7 @@ export default function OtpVerification() {
         }
       }
     } catch (err) {
-      setLocalError(err.response?.data?.message || "OTP verification failed")
-    } finally {
-      setIsLoading(false)
+        // Error is already set in the store, we can just display it.
     }
   }
 
@@ -128,11 +110,14 @@ export default function OtpVerification() {
     setOtp(["", "", "", "", ""])
     setLocalError(null)
     inputRefs.current[0]?.focus()
+    setIsResending(true)
 
     try {
       await getOtp()
     } catch (err) {
-      setLocalError(err.response?.data?.message || "Failed to resend OTP")
+      // Error is set in the store
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -146,12 +131,9 @@ export default function OtpVerification() {
     <div className="min-h-screen bg-black flex items-center p-4 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0">
-        {/* Gradient Orbs */}
         <div className="absolute top-20 left-10 w-72 h-72 bg-[#32cd32]/10 rounded-full blur-3xl animate-pulse-slow"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#32cd32]/5 rounded-full blur-3xl animate-float"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#32cd32]/5 rounded-full blur-3xl"></div>
-
-        {/* Floating Icons */}
         <div className="absolute top-32 left-20 animate-float">
           <Store className="h-8 w-8 text-[#32cd32]/30" />
         </div>
@@ -175,7 +157,6 @@ export default function OtpVerification() {
         </div>
       </div>
 
-      {/* Storely Logo */}
       <div className="absolute top-6 left-6 flex items-center space-x-2 z-20">
         <Store className="h-8 w-8 text-[#32cd32]" />
         <span className="text-xl font-bold bg-gradient-to-r from-[#32cd32] to-[#4ade80] bg-clip-text text-transparent">
@@ -232,10 +213,10 @@ export default function OtpVerification() {
               </div>
               <button
                 type="submit"
-                disabled={isLoading || otp.join("").length !== 5}
-                className="w-full bg-gradient-to-r from-[#32cd32] to-[#28a428] hover:from-[#28a428] hover:to-[#22aa22] disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-bold py-4 px-6 rounded-xl transition-all duration-200 text-lg transform hover:scale-105 hover:shadow-lg hover:shadow-[#32cd32]/25"
+                disabled={isAuthLoading || otp.join("").length !== 5}
+                className="w-full bg-gradient-to-r from-[#32cd32] to-[#28a428] hover:from-[#28a428] hover:to-[#22aa22] disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-4 px-6 rounded-xl transition-all duration-200 text-lg transform hover:scale-105 hover:shadow-lg hover:shadow-[#32cd32]/25"
               >
-                {isLoading ? (
+                {isAuthLoading && !isResending ? (
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                     Verifying...
@@ -249,9 +230,10 @@ export default function OtpVerification() {
               <p className="text-gray-400 mb-2">Didn't receive the code?</p>
               <button
                 onClick={handleResendCode}
-                className="text-[#32cd32] hover:text-[#28a428] font-medium underline transition-colors duration-200"
+                disabled={isAuthLoading}
+                className="text-[#32cd32] hover:text-[#28a428] font-medium underline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Resend Code
+                {isAuthLoading && isResending ? "Resending..." : "Resend Code"}
               </button>
             </div>
             <div className="text-center mt-8">
