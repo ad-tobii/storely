@@ -29,7 +29,7 @@ const port = process.env.PORT || 3000; // Use Railway's port or default to 3000
 // --- Production-Ready CORS Configuration ---
 const allowedOrigins = [
   'http://localhost:5173', // Your local frontend for development
-  process.env.FRONTEND_PROD_URL, // Your production frontend URL from .env
+  "https://storely-ochre.vercel.app", // Your production frontend URL from .env
 ].filter(Boolean); // This removes any falsy values (e.g., if FRONTEND_PROD_URL is not set)
 
 const corsOptions = {
