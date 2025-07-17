@@ -48,7 +48,7 @@ export default function LoginPage() {
         if (redirectUrl) {
           window.location.href = redirectUrl
         } else {
-          navigate(loggedInUser.role === "seller" ? "/seller/dashboard" : "/")
+          navigate(loggedInUser.role === "seller" ? "/seller-dashboard" : "/")
         }
       }
     } catch (error) {
